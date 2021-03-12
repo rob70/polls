@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
+from datetime import datetime
+
 
 
 
@@ -9,11 +11,16 @@ from django.utils.translation import ugettext_lazy as _
 
 class Question(models.Model):
     question_text = models.CharField(max_length=200)
-    pub_date = models.DateTimeField('date published')
+    pub_date = models.DateTimeField('date published', default=datetime.now)
+    def __str__(self):
+        return self.question_text
 
 
 
-
+""" 
+Source for choices solution: 
+https://www.merixstudio.com/blog/django-models-declaring-list-available-choices-right-way/
+"""
 class Evaluation(models.Model):
     """" An evaluation of each question as an integer 
     submitted by a user """
@@ -35,3 +42,5 @@ class Evaluation(models.Model):
 
     #choice = models.ForeignKey(Choice, on_delete=models.CASCADE)    
     evaluation = models.IntegerField(default=0, choices=EVALUATION)
+    def __str__(self):
+        return str(self.evaluation)
