@@ -7,9 +7,14 @@ from datetime import datetime
 
 
 # Create your models here.
-
+class QuestionCategory(models.Model):
+    category_text = models.CharField(max_length=200)
+    pub_date = models.DateTimeField('date published', default=datetime.now)
+    def __str__(self):
+        return self.category_text
 
 class Question(models.Model):
+    question_category = models.ForeignKey(QuestionCategory, default=1, on_delete=models.CASCADE)
     question_text = models.CharField(max_length=200)
     pub_date = models.DateTimeField('date published', default=datetime.now)
     def __str__(self):
