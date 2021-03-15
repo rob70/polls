@@ -12,4 +12,7 @@ urlpatterns = [
     path('<int:question_id>/results/', views.results, name='results'),
     # ex: /polls/5/vote/
     path('<int:question_id>/vote/', views.vote, name='vote'),
+    # category
+    path('category/<int:question_category_id>/', views.categorydetails, name='categorydetails'),
+    path('category/edit/<int:question_category_id>/', views.manage_questions, name='manage_questions'),
 ]

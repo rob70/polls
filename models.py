@@ -12,6 +12,9 @@ class QuestionCategory(models.Model):
     pub_date = models.DateTimeField('date published', default=datetime.now)
     def __str__(self):
         return self.category_text
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('views.categorydetails', args=[str(self.id)])
 
 class Question(models.Model):
     question_category = models.ForeignKey(QuestionCategory, default=1, on_delete=models.CASCADE)

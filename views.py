@@ -2,13 +2,13 @@ from django.shortcuts import get_object_or_404, render
 from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import Question, Evaluation
+from .models import Question, Evaluation, QuestionCategory
 from .forms import EvaluateForm 
 
 # Create your views here.
 def index(request):
-    latest_question_list = Question.objects.order_by('-pub_date')[:5]
-    context = {'latest_question_list': latest_question_list}
+    question_category_list = QuestionCategory.objects.order_by('-pub_date')[:5]
+    context = {'question_category_list': question_category_list}
     return render(request, 'polls/index.html', context)
 
 def vote(request, question_id):
@@ -52,8 +52,6 @@ def results(request, question_id):
     context = {'question': question, 'evaluation': evaluation}
     return render(request, 'polls/results.html', context )
 
-
-
 def detail(request, question_id):
     user_id = request.user
     try:
@@ -76,6 +74,30 @@ def detail(request, question_id):
         'form': form, 
     }
     return render(request, 'polls/detail.html', context)
+"""
+Category views
+"""
+
+def categorydetails(request, question_category_id):
+    question_category = QuestionCategory.objects.get(pk=question_category_id)
+    context = {
+        'question_category': question_category,
+    }
+    return render(request, 'polls/categorydetails.html', context,)
+
+def manage_questions(request, question_category_id):
+    question_category = QuestionCategory.objects.get(pk=question_category_id)
+    QuestionInlineFormSet = inlineformset_factory(QuestionCategory, Question, fields=('question_text',))
+    if request.method == "POST":
+        formset = QuestionInlineFormSet(request.POST, request.FILES, instance=author)
+        if formset.is_valid():
+            formset.save()
+            # Do something. Should generally end with a redirect. For example:
+            return HttpResponseRedirect(question_category.get_absolute_url())
+    else:
+        formset = QuestionInlineFormSet(instance=question_category)
+    return render(request, 'polls/managequestions.html', {'formset': formset})
+
 
 def orignal_results(request, question_id):
     response = "You're looking at the results of question %s."
