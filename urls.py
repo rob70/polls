@@ -15,4 +15,6 @@ urlpatterns = [
     # category
     path('category/<int:question_category_id>/', views.categorydetails, name='categorydetails'),
     path('category/edit/<int:question_category_id>/', views.manage_questions, name='manage_questions'),
+    path("surveys/<int:question_category_id>/", views.submit, name="survey-submit"),
+
 ]

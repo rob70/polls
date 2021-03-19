@@ -3,7 +3,9 @@ from django.http import Http404
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .models import Question, Evaluation, QuestionCategory
-from .forms import EvaluateForm 
+from .forms import EvaluateForm, AnswerForm, BaseAnswerFormSet
+from django.forms import inlineformset_factory, formset_factory
+
 
 # Create your views here.
 def index(request):
@@ -85,11 +87,12 @@ def categorydetails(request, question_category_id):
     }
     return render(request, 'polls/categorydetails.html', context,)
 
+# Add questions
 def manage_questions(request, question_category_id):
     question_category = QuestionCategory.objects.get(pk=question_category_id)
     QuestionInlineFormSet = inlineformset_factory(QuestionCategory, Question, fields=('question_text',))
     if request.method == "POST":
-        formset = QuestionInlineFormSet(request.POST, request.FILES, instance=author)
+        formset = QuestionInlineFormSet(request.POST, request.FILES, instance=question_category)
         if formset.is_valid():
             formset.save()
             # Do something. Should generally end with a redirect. For example:
@@ -97,6 +100,56 @@ def manage_questions(request, question_category_id):
     else:
         formset = QuestionInlineFormSet(instance=question_category)
     return render(request, 'polls/managequestions.html', {'formset': formset})
+
+
+def submit(request, question_category_id):
+    """Testing Survey-taker submit their completed survey."""
+    print(" Start view ######################")
+    user = request.user
+    try:
+        survey = QuestionCategory.objects.prefetch_related("question_set__evaluation_set").get(
+            pk=question_category_id
+        )
+    except QuestionCategory.DoesNotExist:
+        raise Http404()
+    """
+    try:
+        sub = survey.submission_set.get(pk=sub_pk, is_complete=False)
+    except Submission.DoesNotExist:
+        raise Http404()  """
+
+    questions = survey.question_set.all()
+    # options is a QuerySet of Evaluation objects for each question
+    options = [q.evaluation_set.filter(user=user) for q in questions]
+    form_kwargs = {"empty_permitted": False, "options": options}
+    print("--- THIS IS FORM_KWARGS FROM THE VIEW ---")
+    print(form_kwargs)
+    AnswerFormSet = formset_factory(AnswerForm, extra=len(questions), formset=BaseAnswerFormSet)
+    if request.method == "POST":
+        formset = AnswerFormSet(request.POST, form_kwargs=form_kwargs)
+        if formset.is_valid():
+            with transaction.atomic():
+                for form in formset:
+                    Evaluation.objects.create(
+                        evaluation = form.cleaned_data["option"], 
+                        question_id=sub_pk,
+                    )
+
+                sub.is_complete = True
+                sub.save()
+            return redirect("survey-thanks", pk=survey_pk)
+
+    else:
+        formset = AnswerFormSet(form_kwargs=form_kwargs)
+
+    question_forms = zip(questions, formset)
+    print("Type question_forms", type(question_forms))
+    print(" End view ######################")
+    return render(
+        request,
+        "polls/submit.html",
+        {"survey": survey, "question_forms": question_forms, "formset": formset},
+    )
 
 
 def orignal_results(request, question_id):
