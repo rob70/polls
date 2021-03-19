@@ -121,10 +121,15 @@ def submit(request, question_category_id):
     questions = survey.question_set.all()
     # options is a QuerySet of Evaluation objects for each question
     options = [q.evaluation_set.filter(user=user) for q in questions]
-    form_kwargs = {"empty_permitted": False, "options": options}
+    eva_obj = Evaluation.objects.filter(user=user)
+    evaluation_data = [{'option': l.evaluation}
+                    for l in eva_obj]
+    list = [{ 'option': 20}, {'option': 50 }]
+    print(" ########### evaluation_data ####", evaluation_data)
+    form_kwargs = {"empty_permitted": True}
     print("--- THIS IS FORM_KWARGS FROM THE VIEW ---")
     print(form_kwargs)
-    AnswerFormSet = formset_factory(AnswerForm, extra=len(questions), formset=BaseAnswerFormSet)
+    AnswerFormSet = formset_factory(AnswerForm, extra=len(questions))
     if request.method == "POST":
         formset = AnswerFormSet(request.POST, form_kwargs=form_kwargs)
         if formset.is_valid():
@@ -140,7 +145,7 @@ def submit(request, question_category_id):
             return redirect("survey-thanks", pk=survey_pk)
 
     else:
-        formset = AnswerFormSet(form_kwargs=form_kwargs)
+        formset = AnswerFormSet(form_kwargs=form_kwargs, initial = evaluation_data)
 
     question_forms = zip(questions, formset)
     print("Type question_forms", type(question_forms))

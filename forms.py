@@ -22,18 +22,18 @@ class AnswerForm(forms.Form):
         # The data goes from a django QuerySet to python set
         # Why? Set is an unordered list 
 
-        options = kwargs.pop("options")
-        print("Type of options is: ", type(options))
+        # 1. options = kwargs.pop("options")
+        # print("Type of options is: ", type(options))
         # Django class "QuerySet"
-        print("Options are: ", options)
+        # 2. print("Options are: ", options)
         # Options must be a list of Option objects
-        choices = {(o.pk, o.evaluation) for o in options}
-        print("Choices ############")
+        # 3. choices = {(o.pk, o.evaluation) for o in options}
+        """ print("Choices ############")
         print(choices)
-        print("Type of choices is: ", type(choices))
+        print("Type of choices is: ", type(choices)) """
         # returns class: 'set' Set is unordered? 
-        for a in choices:
-            print("elements in choices: ", a)
+        """ for a in choices:
+            print("elements in choices: ", a) """
         # Super
         super().__init__(*args, **kwargs)
         print(" Have called super !")
