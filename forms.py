@@ -43,13 +43,13 @@ class AnswerForm(forms.Form):
                 print ("%s : %s" %(key, value))
         else:
             print("kwargs is None")
-        print("Hei")
+        
         GEEKS_CHOICES =( 
-            ("1", "0"), 
-            ("2", "20"), 
-            ("3", "50"), 
-            ("4", "80"), 
-            ("5", "100"), 
+            ("0", "0"), 
+            ("20", "20"), 
+            ("50", "50"), 
+            ("80", "80"), 
+            ("100", "100"), 
         ) 
         print("Type of Geeks_choices: ", type(GEEKS_CHOICES))
         option_field = forms.ChoiceField(choices=GEEKS_CHOICES, widget=forms.RadioSelect, required=True)

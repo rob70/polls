@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import Http404
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 from .models import Question, Evaluation, QuestionCategory
 from .forms import EvaluateForm, AnswerForm, BaseAnswerFormSet
@@ -122,28 +122,68 @@ def submit(request, question_category_id):
     # options is a QuerySet of Evaluation objects for each question
     options = [q.evaluation_set.filter(user=user) for q in questions]
     eva_obj = Evaluation.objects.filter(user=user)
+    # Creating a list of dictionaries. This permits me to use the same
+    # keyword in the keyword:value pairs.
     evaluation_data = [{'option': l.evaluation}
                     for l in eva_obj]
+    
     list = [{ 'option': 20}, {'option': 50 }]
     print(" ########### evaluation_data ####", evaluation_data)
+    print(type(evaluation_data[0]['option'])) 
+    
     form_kwargs = {"empty_permitted": True}
     print("--- THIS IS FORM_KWARGS FROM THE VIEW ---")
     print(form_kwargs)
-    AnswerFormSet = formset_factory(AnswerForm, extra=len(questions))
+    AnswerFormSet = formset_factory(AnswerForm, extra=-1)
+    content = []
     if request.method == "POST":
+        print("###########POST-START###########")
         formset = AnswerFormSet(request.POST, form_kwargs=form_kwargs)
         if formset.is_valid():
-            with transaction.atomic():
-                for form in formset:
-                    Evaluation.objects.create(
-                        evaluation = form.cleaned_data["option"], 
-                        question_id=sub_pk,
-                    )
+            content.append("formset is valid")
 
-                sub.is_complete = True
-                sub.save()
-            return redirect("survey-thanks", pk=survey_pk)
+            # with transaction.atomic():
+            parent_child_merge = zip(questions, eva_obj)
+            x = 0
+            for form in formset:
+                
+                print("loop number :", x )
+                opt = form.cleaned_data.get("option")
+                q = questions[x]
+                print(" question q er: ", q.question_text)
+                try:
+                    evaluation_object = eva_obj[x]
+                    evaluation_object.evaluation = opt
+                    evaluation_object.save()
+                except IndexError:
+                    e = Evaluation(question = q, user = user, evaluation = opt)
+                    e.save()
 
+
+
+                #print("form is: ", form)
+                print("option is :", opt)
+                #print(form.cleaned_data["option"])
+                x = x+1
+            for q, e in parent_child_merge:
+                print (q.question_text, e.evaluation)
+                content.append(q)
+                content.append(e)
+                
+                """ Evaluation.objects.create(
+                    evaluation = form.cleaned_data["option"], 
+                    #question_id=sub_pk,
+                ) """
+            
+            print("###########POST-END###########")
+            # sub.save()
+        
+            #return redirect("survey-thanks", pk=survey_pk)
+            response = "You're looking at the results of category %s."
+        return HttpResponseRedirect(reverse('polls:cat_results', args=(1, )))
+        
+        
+        
     else:
         formset = AnswerFormSet(form_kwargs=form_kwargs, initial = evaluation_data)
 
@@ -156,7 +196,34 @@ def submit(request, question_category_id):
         {"survey": survey, "question_forms": question_forms, "formset": formset},
     )
 
-
+def category_results(request, question_category_id):
+    user = request.user
+    question_category = QuestionCategory.objects.get(pk=question_category_id)
+    user = request.user
+    try:
+        results = QuestionCategory.objects.prefetch_related("question_set__evaluation_set").get(
+            pk=question_category_id
+        )
+    except QuestionCategory.DoesNotExist:
+        raise Http404()
+    # look up the questions
+    questions = results.question_set.all()
+    # look up existing evaluations for the user
+    options = [q.evaluation_set.filter(user=user) for q in questions]
+    # Choosing first evaluation object from evaluation query set associated with the user
+    #evaluation_object = question.evaluation_set.filter(user=user)[0]
+    # The concrete evaluation from the object
+    eva_obj = Evaluation.objects.filter(user=user)
+    evaluation_data = [{'option': l.evaluation}
+                    for l in eva_obj]
+    q_and_e = zip(questions, evaluation_data)
+    context = {'questions': questions, 
+                'evaluation_data': evaluation_data,
+                'q_and_e': q_and_e,
+                'question_category': question_category,
+                }
+    return render(request, 'polls/category_results.html', context )
+    
 def orignal_results(request, question_id):
     response = "You're looking at the results of question %s."
     return HttpResponse(response % question_id)
