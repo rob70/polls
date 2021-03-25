@@ -134,7 +134,7 @@ def submit(request, question_category_id):
     form_kwargs = {"empty_permitted": True}
     print("--- THIS IS FORM_KWARGS FROM THE VIEW ---")
     print(form_kwargs)
-    AnswerFormSet = formset_factory(AnswerForm, extra=-1)
+    AnswerFormSet = formset_factory(AnswerForm, extra=len(questions)-len(evaluation_data))
     content = []
     if request.method == "POST":
         print("###########POST-START###########")
@@ -186,8 +186,15 @@ def submit(request, question_category_id):
         
     else:
         formset = AnswerFormSet(form_kwargs=form_kwargs, initial = evaluation_data)
-
+    print("$$$$$$$$ formset $$$$$$$")
+    for form in formset:
+        print(form)
     question_forms = zip(questions, formset)
+    print("#### question_forms #####")
+    """ for questions, formset in question_forms:
+        print("Q",questions, "F", formset )
+     """
+    #print("q_form = ", questions, formset)
     print("Type question_forms", type(question_forms))
     print(" End view ######################")
     return render(
