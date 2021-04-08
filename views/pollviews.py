@@ -2,8 +2,8 @@ from django.shortcuts import get_object_or_404, render
 from django.http import Http404
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
-from .models import Question, Evaluation, QuestionCategory
-from .forms import EvaluateForm, AnswerForm, BaseAnswerFormSet
+from ..models import Question, Evaluation, QuestionCategory
+from ..forms import EvaluateForm, AnswerForm, BaseAnswerFormSet
 from django.forms import inlineformset_factory, formset_factory
 
 
@@ -92,14 +92,18 @@ def manage_questions(request, question_category_id):
     question_category = QuestionCategory.objects.get(pk=question_category_id)
     QuestionInlineFormSet = inlineformset_factory(QuestionCategory, Question, fields=('question_text',))
     if request.method == "POST":
+        print(" request method = post")
         formset = QuestionInlineFormSet(request.POST, request.FILES, instance=question_category)
         if formset.is_valid():
+            print(" Formset is valid")
             formset.save()
             # Do something. Should generally end with a redirect. For example:
             return HttpResponseRedirect(question_category.get_absolute_url())
+        else: 
+            print(formset.errors)
     else:
         formset = QuestionInlineFormSet(instance=question_category)
-    return render(request, 'polls/managequestions.html', {'formset': formset})
+    return render(request, 'polls/managequestionswfields.html', {'formset': formset})
 
 
 def submit(request, question_category_id):
@@ -131,7 +135,7 @@ def submit(request, question_category_id):
     print(" ########### evaluation_data ####", evaluation_data)
     print(type(evaluation_data[0]['option'])) 
     
-    form_kwargs = {"empty_permitted": True}
+    form_kwargs = {"empty_permitted": False}
     print("--- THIS IS FORM_KWARGS FROM THE VIEW ---")
     print(form_kwargs)
     AnswerFormSet = formset_factory(AnswerForm, extra=len(questions)-len(evaluation_data))
@@ -176,10 +180,10 @@ def submit(request, question_category_id):
                 ) """
             
             print("###########POST-END###########")
-            # sub.save()
+            
         
-            #return redirect("survey-thanks", pk=survey_pk)
-            response = "You're looking at the results of category %s."
+            
+            
         return HttpResponseRedirect(reverse('polls:cat_results', args=(1, )))
         
         
@@ -204,7 +208,7 @@ def submit(request, question_category_id):
     )
 
 def category_results(request, question_category_id):
-    user = request.user
+    
     question_category = QuestionCategory.objects.get(pk=question_category_id)
     user = request.user
     try:
@@ -230,7 +234,13 @@ def category_results(request, question_category_id):
                 'question_category': question_category,
                 }
     return render(request, 'polls/category_results.html', context )
-    
+
+def mypage(request):
+    # start or edit test
+    question_categories = QuestionCategory.objects.all() 
+    context = {'question_categories': question_categories}
+    return render(request, 'polls/mypage.html', context)
+
 def orignal_results(request, question_id):
     response = "You're looking at the results of question %s."
     return HttpResponse(response % question_id)
