@@ -15,8 +15,7 @@ class QuestionCategory(models.Model):
     def get_absolute_url(self):
         from django.urls import reverse
         return reverse('polls:categorydetails', args=[str(self.id)])
-        # This one works, but is not as portable
-        #return "/polls/category/%i/" % self.id
+        
 class Question(models.Model):
     question_category = models.ForeignKey(QuestionCategory, default=1, on_delete=models.CASCADE)
     question_text = models.CharField(max_length=200)

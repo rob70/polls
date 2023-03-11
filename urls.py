@@ -4,7 +4,8 @@ from . import views
 
 app_name = 'polls'
 urlpatterns = [
-# ex: /polls/
+
+    # ex: /polls/
     path('', views.pollviews.index, name='index'),
     # ex: /polls/5/
     path('<int:question_id>/', views.pollviews.detail, name='detail'),
@@ -18,6 +19,8 @@ urlpatterns = [
     path('category/results/<int:question_category_id>/', views.pollviews.category_results, name='cat_results'),
     path("surveys/<int:question_category_id>/", views.pollviews.submit, name="survey-submit"),
     path('mypage', views.pollviews.student_overview, name="min-side"),
+
+    # auth urls
     path("signup/", views.auth.register, name="register"),
     path("login/", views.auth.logg_inn, name="login"),
     path("logout/", views.auth.logout, name="logged-out"),
